@@ -1,0 +1,44 @@
+root_dir: ${oc.env:GENSIM_ROOT}
+tag: default
+debug: false
+gpt_temperature: 0.8
+prompt_folder: topdown_chain_of_thought_prompt
+max_env_run_cnt: 3
+trials: 10
+output_folder: output/output_stats
+model_output_dir: ''
+gpt_model: gpt-4-1106-preview
+openai_key: ${oc.env:OPENAI_KEY}
+task_description_candidate_num: 10
+task_asset_candidate_num: -1
+task_code_candidate_num: 4
+prompt_data_path: prompts/data/
+save_memory: true
+load_memory: true
+use_template: true
+reflection_agreement_num: 2
+target_task_name: build-car
+save_code_early: false
+load_task_num: -1
+data_dir: ${root_dir}/data
+assets_root: ${root_dir}/cliport/environments/assets/
+disp: true
+shared_memory: false
+task: packing-boxes-pairs-seen-colors
+mode: train
+'n': 1000
+save_data: true
+dataset:
+  type: single
+  images: true
+  cache: true
+  augment:
+    theta_sigma: 60
+record:
+  save_video: false
+  save_video_path: ${data_dir}/${task}-${mode}/videos/
+  add_text: false
+  add_task_text: true
+  fps: 20
+  video_height: 640
+  video_width: 720

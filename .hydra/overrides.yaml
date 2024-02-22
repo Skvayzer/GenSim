@@ -1,0 +1,7 @@
+- disp=True
+- prompt_folder=topdown_chain_of_thought_prompt
+- save_memory=True
+- load_memory=True
+- task_description_candidate_num=10
+- use_template=True
+- target_task_name=build-car

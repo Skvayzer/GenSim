@@ -1,0 +1,4 @@
+prompt,metric,success
+topdown_chain_of_thought_prompt,syntax,0.0
+topdown_chain_of_thought_prompt,runtime,0.0
+topdown_chain_of_thought_prompt,env. completion,0.0
