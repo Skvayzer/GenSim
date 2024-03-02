@@ -29,32 +29,10 @@ def set_seed_everywhere(seed):
     np.random.seed(seed)
     random.seed(seed)
 
-class Dataset_Custom(torch.utils.data.Dataset):
-  'Characterizes a dataset for PyTorch'
-  def __init__(self, data_path, task_name, list_IDs):
-        'Initialization'
-        self.data_path = data_path
-        self.list_IDs = list_IDs
-        self.task_name = task_name
-
-  def __len__(self):
-        'Denotes the total number of samples'
-        return len(self.list_IDs)
-
-  def __getitem__(self, index):
-        'Generates one sample of data'
-        # Select sample
-        ID = self.list_IDs[index]
-
-        # Load data and get label
-        X = torch.load(self.data_path+'/'+self.task_name+'-{}.db'.format(str(10000+ID)[1:]))
-
-        # print('\n\nITEM\n\n', X)
-
-        return X
 
 @hydra.main(config_path="./cfg", config_name='train', version_base="1.2")
 def main(cfg):
+    import torch.cuda
     # Logger
     set_seed_everywhere(1)
     wandb_logger = None
@@ -67,31 +45,34 @@ def main(cfg):
 
     # Checkpoint saver
     hydra_dir = Path(os.getcwd())
-    checkpoint_path = os.path.join(cfg['train']['train_dir'], 'checkpoints')
+    checkpoint_path = os.path.join(cfg['train']['data_dir'], 'checkpoints')
     last_checkpoint_path = os.path.join(checkpoint_path, 'last.ckpt')
     last_checkpoint = last_checkpoint_path if os.path.exists(last_checkpoint_path) and cfg['train']['load_from_last_ckpt'] else None
     checkpoint_callback = [ModelCheckpoint(
-        # monitor=cfg['wandb']['saver']['monitor'],
-        dirpath=os.path.join(checkpoint_path, 'best'),
-        save_top_k=1,
-        # every_n_epochs=1,
+        monitor=cfg['wandb']['saver']['monitor'],
+        dirpath=os.path.join(checkpoint_path, 'best_{epoch:02d}'),
+        mode='min',
+        save_top_k=3,
+        every_n_epochs=1,
         save_last=True,
-        every_n_train_steps=1    
+        # every_n_train_steps=1    
         )]
 
     # Trainer
-    max_epochs = 1 #cfg['train']['n_steps'] * cfg['train']['batch_size'] // cfg['train']['n_demos']
+    max_epochs = cfg['train']['n_steps'] * cfg['train']['batch_size'] // cfg['train']['n_demos']
+    
     if cfg['train']['training_step_scale'] > 0:
         # scale training time depending on the tasks to ensure coverage.
-        max_epochs = 1 # cfg['train']['training_step_scale'] #  // cfg['train']['batch_size']
-
+        max_epochs = cfg['train']['training_step_scale']  # // cfg['train']['batch_size']
+    use_cuda = torch.cuda.is_available()
+    device = "gpu" if use_cuda else "cpu"
     trainer = Trainer(
-        accelerator='cpu',
+        accelerator=device,
         fast_dev_run=cfg['debug'],
         logger=wandb_logger,
         callbacks=checkpoint_callback,
         max_epochs=max_epochs,
-        # check_val_every_n_epoch=max_epochs // 50,
+        check_val_every_n_epoch=1,
         # resume_from_checkpoint=last_checkpoint,
         sync_batchnorm=True,
         log_every_n_steps=1,  
@@ -130,18 +111,23 @@ def main(cfg):
         train_ds = RavenMultiTaskDatasetBalance(data_dir, cfg, group=task, mode='train', n_demos=n_demos, augment=True)
         val_ds = RavenMultiTaskDatasetBalance(data_dir, cfg, group=task, mode='val', n_demos=n_val, augment=False)
     elif 'my' in dataset_type:
-        data_dir = '/home/cosmos/VScode Projects/coglab/GenSim/data_1k'
-        tsk_name = 'data'
-        list_IDs = range(1000)
+        data_dir = cfg['train']['train_dir']
+        # tsk_name = 'data'
+        # list_IDs = range(1000)
         # training_sets = []
         # training_sets.append(Dataset_Custom(data_path,tsk_name,range(74)))
         # import torch
         # train_dev_sets = torch.utils.data.ConcatDataset(training_sets)
 
-        train_ds = MyCustomDataset(data_dir, 'data', cfg, 
+        ds = MyCustomDataset(data_dir, 'data', cfg, 
                     n_demos=n_demos, augment=False)
-        val_ds = MyCustomDataset(data_dir, 'data', cfg, 
-                    n_demos=n_demos, augment=False)
+        # val_ds = MyCustomDataset(data_dir, 'data', cfg, 
+        #             n_demos=n_val, augment=False)
+
+        train_size = int(0.9 * len(ds))
+        val_size = len(ds) - train_size
+        print("TRAIN/VAL SIZE: ", train_size, val_size)
+        train_ds, val_ds = torch.utils.data.random_split(ds, [train_size, val_size])
 
 
     else:
@@ -151,9 +137,9 @@ def main(cfg):
 
     
     # Parameters
-    params = {'batch_size': 1,  #256
-            'shuffle': True,
-            'num_workers': 0}
+    # params = {'batch_size': 1,  #256
+    #         'shuffle': True,
+    #         'num_workers': 0}
     # if 'my' in dataset_type:
     #     train_loader = torch.utils.data.DataLoader(train_dev_sets, **params)
     #     test_loader = torch.utils.data.DataLoader(train_dev_sets, **params)
@@ -162,13 +148,14 @@ def main(cfg):
     train_loader = DataLoader(train_ds, shuffle=True,
                     pin_memory=True,
                     batch_size=cfg['train']['batch_size'],
-                    num_workers=0 )
+                    num_workers=11 )
     test_loader = DataLoader(val_ds, shuffle=False,
-                num_workers=0,
+                num_workers=11,
                 batch_size=cfg['train']['batch_size'],
                 pin_memory=True)
 
     agent = agents.names[agent_type](name, cfg, train_loader, test_loader)
+    agent = agent.to(dtype=torch.float)
     dt_string = datetime.datetime.now().strftime("%d_%m_%Y_%H:%M:%S")
     print("current time:", dt_string)
     

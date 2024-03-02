@@ -1004,7 +1004,7 @@ class MyCustomDataset(Dataset):
         if os.path.exists(self._path):
             for fname in sorted(os.listdir(self._path)):
                 if '.db' in fname:
-                    seed = int(fname[(fname.find('-') + 1):-4])
+                    seed = int(fname[:fname.find('.')][-4:])
                     self.n_episodes += 1
                     self.max_seed = max(self.max_seed, seed)
 
@@ -1065,7 +1065,7 @@ class MyCustomDataset(Dataset):
 
     def load(self, episode_id, images=True, cache=False):
         # TODO(lirui): consider loading into memory
-        def load_episode(episode_id):
+        def load_episode(episode_id, fname):
 
             # Check if sample is in cache.
             if cache:
@@ -1075,7 +1075,7 @@ class MyCustomDataset(Dataset):
                     self._cache[episode_id] = {}
 
             # Load sample from files.
-            data = torch.load(self._path+'/'+self.task_name+'-{}.db'.format(str(10000+episode_id)[1:]))
+            data = torch.load(self._path+'/'+fname)
             if cache:
                 self._cache[episode_id] = data
             return data
@@ -1085,21 +1085,21 @@ class MyCustomDataset(Dataset):
         # path = os.path.join(self._path, 'action')
         for fname in sorted(os.listdir(self._path)):
             if f'{episode_id:04d}' in fname:
-                seed = int(fname[(fname.find('-') + 1):-4])
+                seed = int(fname[:fname.find('.')][-4:])
 
                 # Load data.
-                episode = load_episode(episode_id)
+                episode = load_episode(episode_id, fname)
                 colors = episode[0]
-                # depth = episode[1]
-                actions = episode[1]
-                rewards = episode[2]
-                infos = episode[3]
+                depths = episode[1]
+                actions = episode[2]
+                rewards = episode[3]
+                infos = episode[4]
 
                 # Reconstruct episode.
                 reconstructed_episode = []
                 for i in range(len(colors)):
-                    # obs = {'color': color[i], 'depth': depth[i]} if images else {}
-                    obs = {'color': colors[i]} if images else {}
+                    obs = {'color': colors[i], 'depth': depths[i]} if images else {}
+                    # obs = {'color': colors[i]} if images else {}
                     single_action = {'pose0': (actions['pose0'][0][i], actions['pose0'][1][i]), 
                                      'pose1': (actions['pose1'][0][i], actions['pose1'][1][i])}
                     info = {'lang_goal': infos[i]}
@@ -1124,8 +1124,7 @@ class MyCustomDataset(Dataset):
             cam_config = self.cam_config
 
         # Get color and height maps from RGB-D images.
-        cmap, hmap = utils.get_fused_heightmap(
-            obs, cam_config, self.bounds, self.pix_size)
+        cmap, hmap = obs.values() # utils.get_fused_heightmap(obs, cam_config, self.bounds, self.pix_size)
         img = np.concatenate((cmap,
                               hmap[Ellipsis, None],
                               hmap[Ellipsis, None],
@@ -1136,7 +1135,7 @@ class MyCustomDataset(Dataset):
     def process_sample(self, datum, augment=True):
         # Get training labels from data sample.
         (obs, act, _, info) = datum
-        img = np.concatenate((obs['color'], obs['color']), axis=-1) #self.get_image(obs)
+        img = self.get_image(obs) # np.concatenate((obs['color'], obs['color']), axis=-1) 
         
 
         # p0, p1 = None, None
@@ -1214,7 +1213,7 @@ class MyCustomDataset(Dataset):
     def process_goal(self, goal, perturb_params):
         # Get goal sample.
         (obs, act, _, info) = goal
-        img = np.concatenate((obs['color'], obs['color']), axis=-1) #self.get_image(obs)
+        img = self.get_image(obs) # np.concatenate((obs['color'], obs['color']), axis=-1)
 
         # p0, p1 = None, None
         # p0_theta, p1_theta = None, None

@@ -11,7 +11,7 @@ class BuildCar(Task):
         self.lang_template = "Construct a simple car structure using blocks and cylinders. " \
                              "Firstly, create the base of the car by positioning two red blocks side by side. " \
                              "Then, add the car body by stacking a blue block on top of the base. " \
-                             "For the wheels, place a green cylinder on each side of the base blocks."
+                             "For the wheels, place a black cylinder on each side of the base blocks."
         self.task_completed_desc = "done building car."
         self.additional_reset()
 
@@ -56,7 +56,7 @@ class BuildCar(Task):
         wheels = []
         for idx in range(4):
             wheel_pose = self.get_random_pose(env, wheel_size)
-            wheel_id = env.add_object(wheel_urdf, wheel_pose, color=utils.COLORS['green'])
+            wheel_id = env.add_object(wheel_urdf, wheel_pose, color=utils.COLORS['black'])
             wheels.append(wheel_id)
 
         # Goal: Firstly, create the base of the car by positioning two red blocks side by side.
@@ -90,5 +90,5 @@ class BuildCar(Task):
                       metric='pose',
                       params=None,
                       step_max_reward=1./3,
-                      language_goal="For the wheels, place a green cylinder on each side of the base blocks.")
+                      language_goal="For the wheels, place a black cylinder on each side of the base blocks.")
 

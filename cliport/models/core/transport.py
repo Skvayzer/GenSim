@@ -25,7 +25,7 @@ class Transport(nn.Module):
         self.pad_size = int(self.crop_size / 2)
         self.padding = np.zeros((3, 2), dtype=int)
         self.padding[:2, :] = self.pad_size
-
+  
         in_shape = np.array(in_shape)
         in_shape = tuple(in_shape)
         self.in_shape = in_shape
@@ -54,11 +54,16 @@ class Transport(nn.Module):
         output = F.conv2d(in0, in1, padding=(self.pad_size, self.pad_size))
         output = F.interpolate(output, size=(in0.shape[-2], in0.shape[-1]), mode='bilinear')
         output = output[:,:,self.pad_size:-self.pad_size, self.pad_size:-self.pad_size]
+        output_shape = output.shape
+
+        # a hack around the batch size 1. The shape needs to tile back.
+        channel_num = in1.shape[0] // in0.shape[0]
+        output = torch.stack([output[i,i*channel_num:(i+1)*channel_num] for i in range(len(output))], dim=0)
         if softmax:
-            output_shape = output.shape
-            output = output.reshape((1, np.prod(output.shape)))
+            output = output.reshape((len(output), -1))
             output = F.softmax(output, dim=-1)
-            output = output.reshape(output_shape[1:])
+        output = output.reshape(len(output),channel_num,output_shape[2],output_shape[3])
+
         return output
 
     def transport(self, in_tensor, crop):
@@ -70,12 +75,14 @@ class Transport(nn.Module):
         """Forward pass."""
         img_unprocessed = np.pad(inp_img, self.padding, mode='constant')
         input_data = img_unprocessed
-        in_shape = (1,) + input_data.shape
+        in_shape =  input_data.shape
+        if len(inp_shape) == 3:
+            inp_shape = (1,) + inp_shape
         input_data = input_data.reshape(in_shape) # [B W H D]
         in_tensor = torch.from_numpy(input_data).to(dtype=torch.float, device=self.device)
 
         # Rotation pivot.
-        pv = np.array([p[0], p[1]]) + self.pad_size
+        pv = p  + self.pad_size # np.array([p[0], p[1]])
 
         # Crop before network (default from Transporters CoRL 2020).
         hcrop = self.pad_size

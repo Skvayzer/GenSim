@@ -18,18 +18,18 @@ train:
   # folders
   model_task: ${train.task}
   exp_folder: exps
-  train_dir: ${root_dir}/${train.exp_folder}/${train.model_task}-${train.agent}-n${train.n_demos}-train
+  train_dir: /home/cosmos/VScode Projects/coglab/GenSim/GenSim_buildcar_trajectories #/GenSim/data/GenSim_Data_Train/build-car #${root_dir}/${train.exp_folder}/${train.model_task}-${train.agent}-n${train.n_demos}-train
   data_dir: ${root_dir}/data
 
   # task configs
-  task: stack-block-pyramid-seq-seen-colors
+  task: build-car #stack-block-pyramid-seq-seen-colors # GenSim_buildcar_trajectories # 
   agent: cliport
-  n_demos: 2
-  n_steps: 61000 # original paper use 200000 for single task and use 601000 for multi-task models
+  n_demos: 1000 # change to small number to reduce trajectory amount
+  n_steps: 200000 # original paper use 200000 for single task and use 601000 for multi-task models
 
   # hyper params
-  n_rotations: 1
-  batch_size: 1
+  n_rotations: 36
+  batch_size: 3
   batchnorm: False # important: False because batch_size=1
   lr: 1e-4
 
@@ -38,10 +38,10 @@ train:
   lang_fusion_type: 'mult'
   training_step_scale: 200 # How many epochs are needed. 100 data sample requires 20000 steps. -1 means ignored.
 
-  # script configs
+  # script config
   gpu: -1 # -1 for all
-  log: False # log metrics and stats to wandb
-  n_val: 1
+  log: True # log metrics and stats to wandb
+  n_val: 100
   val_repeats: 1
   save_steps: [100, 200, 3000, 4000, 5000, 7000, 10000, 20000, 40000, 80000, 120000, 160000, 200000, 300000, 400000, 500000, 600000, 800000, 1000000, 1200000]
   load_from_last_ckpt: False # still change to True

@@ -11,7 +11,7 @@ mode: test # 'val' or 'test'
 agent: cliport
 n_demos: 100 # number of val instances
 train_demos: 1000 # training demos used to train model
-n_repeats: 1 # number of repeats
+n_repeats: 1000 # number of repeats
 gpu: [0]
 save_results: True # write results to json
 update_results: False # overwrite existing json results?
@@ -21,12 +21,12 @@ val_on_heldout: True
 disp: False
 shared_memory: False
 eval_task: build-car # task to evaluate the model on
-model_task: multi-language-conditioned # task the model was trained on (e.g. multi-language-conditioned or packing-boxes-pairs-seen-colors)
+model_task: build-car # task the model was trained on (e.g. multi-language-conditioned or packing-boxes-pairs-seen-colors)
 type: single # 'single' or 'multi'
 
 # paths
 model_dir: ${root_dir}
-exp_folder: cliport_quickstart
+exp_folder: exps
 data_dir: ${root_dir}/data
 assets_root: ${root_dir}/environments/assets/
 

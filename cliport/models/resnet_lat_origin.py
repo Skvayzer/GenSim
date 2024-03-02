@@ -6,9 +6,9 @@ import cliport.utils.utils as utils
 
 from cliport.models.resnet import ConvBlock, IdentityBlock
 
-class ResNet45_10s(nn.Module):
+class ResNet45_10s_origin(nn.Module):
     def __init__(self, input_shape, output_dim, cfg, device, preprocess):
-        super(ResNet45_10s, self).__init__()
+        super(ResNet45_10s_origin, self).__init__()
         self.input_shape = input_shape
         self.input_dim = input_shape[-1]
         self.output_dim = output_dim
@@ -16,7 +16,6 @@ class ResNet45_10s(nn.Module):
         self.device = device
         self.batchnorm = self.cfg['train']['batchnorm']
         self.preprocess = preprocess
-        # import IPython; IPython.embed()
 
         self._make_layers()
 
@@ -49,17 +48,17 @@ class ResNet45_10s(nn.Module):
             IdentityBlock(512, [512, 512, 512], kernel_size=3, stride=1, batchnorm=self.batchnorm),
         )
 
-        # self.layer5 = nn.Sequential(
-        #     ConvBlock(512, [1024, 1024, 1024], kernel_size=3, stride=2, batchnorm=self.batchnorm),
-        #     IdentityBlock(1024, [1024, 1024, 1024], kernel_size=3, stride=1, batchnorm=self.batchnorm),
-        # )
+        self.layer5 = nn.Sequential(
+            ConvBlock(512, [1024, 1024, 1024], kernel_size=3, stride=2, batchnorm=self.batchnorm),
+            IdentityBlock(1024, [1024, 1024, 1024], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+        )
 
-        # # head
-        # self.layer6 = nn.Sequential(
-        #     ConvBlock(1024, [512, 512, 512], kernel_size=3, stride=1, batchnorm=self.batchnorm),
-        #     IdentityBlock(512, [512, 512, 512], kernel_size=3, stride=1, batchnorm=self.batchnorm),
-        #     nn.UpsamplingBilinear2d(scale_factor=2),
-        # )
+        # head
+        self.layer6 = nn.Sequential(
+            ConvBlock(1024, [512, 512, 512], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+            IdentityBlock(512, [512, 512, 512], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+            nn.UpsamplingBilinear2d(scale_factor=2),
+        )
 
         self.layer7 = nn.Sequential(
             ConvBlock(512, [256, 256, 256], kernel_size=3, stride=1, batchnorm=self.batchnorm),
@@ -97,23 +96,13 @@ class ResNet45_10s(nn.Module):
         x = self.preprocess(x, dist='transporter')
         in_shape = x.shape
 
-        # # encoder
-        # for layer in [self.conv1, self.layer1, self.layer2, self.layer3, self.layer4, self.layer5]:
-        #     x = layer(x)
-
-        # # decoder
-        # im = []
-        # for layer in [self.layer6, self.layer7, self.layer8, self.layer9, self.layer10, self.conv2]:
-        #     im.append(x)
-        #     x = layer(x)
-
         # encoder
-        for layer in [self.conv1, self.layer1, self.layer2, self.layer3, self.layer4]:
+        for layer in [self.conv1, self.layer1, self.layer2, self.layer3, self.layer4, self.layer5]:
             x = layer(x)
 
         # decoder
         im = []
-        for layer in [self.layer7, self.layer8, self.layer9, self.layer10, self.conv2]:
+        for layer in [self.layer6, self.layer7, self.layer8, self.layer9, self.layer10, self.conv2]:
             im.append(x)
             x = layer(x)
 

@@ -69,7 +69,6 @@ class ImageGoalTransporterAgent(OriginalTransporterAgent):
     def training_step(self, batch, batch_idx):
         self.attention.train()
         self.transport.train()
-
         frame, goal = batch
 
         # Get training losses.

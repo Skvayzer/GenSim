@@ -5,10 +5,11 @@ import torch.nn.functional as F
 import cliport.utils.utils as utils
 
 from cliport.models.resnet import ConvBlock, IdentityBlock
+from torchvision.models import resnet18, resnet34, resnet50
 
-class ResNet45_10s(nn.Module):
+class PretrainedResNet18(nn.Module):
     def __init__(self, input_shape, output_dim, cfg, device, preprocess):
-        super(ResNet45_10s, self).__init__()
+        super(PretrainedResNet18, self).__init__()
         self.input_shape = input_shape
         self.input_dim = input_shape[-1]
         self.output_dim = output_dim
@@ -16,38 +17,46 @@ class ResNet45_10s(nn.Module):
         self.device = device
         self.batchnorm = self.cfg['train']['batchnorm']
         self.preprocess = preprocess
+        self.pretrained_model = resnet18(pretrained=True)
+        self.pretrained_model.avgpool = nn.Identity()
+        self.pretrained_model.fc = nn.Identity()
+        # self.pretrained_model.eval()
+        self.pretrained_model.conv1 = nn.Conv2d(self.input_dim, 64, kernel_size=2, stride=1, padding=3, bias=False)
         # import IPython; IPython.embed()
+        for param in self.pretrained_model.parameters():
+            param.requires_grad = False
+        self.pretrained_model.conv1.weight.requires_grad = True
 
         self._make_layers()
 
     def _make_layers(self):
         # conv1
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(self.input_dim, 64, stride=1, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64) if self.batchnorm else nn.Identity(),
-            nn.ReLU(True),
-        )
+        # self.conv1 = nn.Sequential(
+        #     nn.Conv2d(self.input_dim, 64, stride=1, kernel_size=3, padding=1),
+        #     nn.BatchNorm2d(64) if self.batchnorm else nn.Identity(),
+        #     nn.ReLU(True),
+        # )
 
-        # fcn
-        self.layer1 = nn.Sequential(
-            ConvBlock(64, [64, 64, 64], kernel_size=3, stride=1, batchnorm=self.batchnorm),
-            IdentityBlock(64, [64, 64, 64], kernel_size=3, stride=1, batchnorm=self.batchnorm),
-        )
+        # # fcn
+        # self.layer1 = nn.Sequential(
+        #     ConvBlock(64, [64, 64, 64], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+        #     IdentityBlock(64, [64, 64, 64], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+        # )
 
-        self.layer2 = nn.Sequential(
-            ConvBlock(64, [128, 128, 128], kernel_size=3, stride=2, batchnorm=self.batchnorm),
-            IdentityBlock(128, [128, 128, 128], kernel_size=3, stride=1, batchnorm=self.batchnorm),
-        )
+        # self.layer2 = nn.Sequential(
+        #     ConvBlock(64, [128, 128, 128], kernel_size=3, stride=2, batchnorm=self.batchnorm),
+        #     IdentityBlock(128, [128, 128, 128], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+        # )
 
-        self.layer3 = nn.Sequential(
-            ConvBlock(128, [256, 256, 256], kernel_size=3, stride=2, batchnorm=self.batchnorm),
-            IdentityBlock(256, [256, 256, 256], kernel_size=3, stride=1, batchnorm=self.batchnorm),
-        )
+        # self.layer3 = nn.Sequential(
+        #     ConvBlock(128, [256, 256, 256], kernel_size=3, stride=2, batchnorm=self.batchnorm),
+        #     IdentityBlock(256, [256, 256, 256], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+        # )
 
-        self.layer4 = nn.Sequential(
-            ConvBlock(256, [512, 512, 512], kernel_size=3, stride=2, batchnorm=self.batchnorm),
-            IdentityBlock(512, [512, 512, 512], kernel_size=3, stride=1, batchnorm=self.batchnorm),
-        )
+        # self.layer4 = nn.Sequential(
+        #     ConvBlock(256, [512, 512, 512], kernel_size=3, stride=2, batchnorm=self.batchnorm),
+        #     IdentityBlock(512, [512, 512, 512], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+        # )
 
         # self.layer5 = nn.Sequential(
         #     ConvBlock(512, [1024, 1024, 1024], kernel_size=3, stride=2, batchnorm=self.batchnorm),
@@ -87,7 +96,7 @@ class ResNet45_10s(nn.Module):
 
         # conv2
         self.conv2 = nn.Sequential(
-            ConvBlock(32, [16, 16, self.output_dim], kernel_size=3, stride=1,
+            ConvBlock(128, [16, 16, self.output_dim], kernel_size=3, stride=1,
                       final_relu=False, batchnorm=self.batchnorm),
             IdentityBlock(self.output_dim, [16, 16, self.output_dim], kernel_size=3, stride=1,
                           final_relu=False, batchnorm=self.batchnorm)
@@ -108,14 +117,28 @@ class ResNet45_10s(nn.Module):
         #     x = layer(x)
 
         # encoder
-        for layer in [self.conv1, self.layer1, self.layer2, self.layer3, self.layer4]:
-            x = layer(x)
+        # for layer in [self.conv1, self.layer1, self.layer2, self.layer3, self.layer4]:
+        #     x = layer(x)
+        # x = x[:, :3, :, :]
+        x = self.pretrained_model.conv1(x)
+        for name, module in self.pretrained_model._modules.items():
+            if name == 'conv1':
+                continue
+            x = module(x)
+            if name == 'layer4':
+                break
+        # with torch.no_grad():
+        #     x = self.pretrained_model(x)
+        # import ipdb;ipdb.set_trace()
+
+        
+        x = F.interpolate(x, size=(8, 8), mode='bilinear')
 
         # decoder
         im = []
-        for layer in [self.layer7, self.layer8, self.layer9, self.layer10, self.conv2]:
+        for layer in [self.layer7, self.layer8, self.conv2]:
             im.append(x)
             x = layer(x)
-
+        
         x = F.interpolate(x, size=(in_shape[-2], in_shape[-1]), mode='bilinear')
         return x, im

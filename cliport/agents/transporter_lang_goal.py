@@ -43,7 +43,7 @@ class TwoStreamClipLingUNetTransporterAgent(TransporterAgent):
     def attn_forward(self, inp, softmax=True):
         inp_img = inp['inp_img'] 
         if type(inp_img) is not torch.Tensor:
-            inp_img = torch.from_numpy(inp_img).to('cpu').float().contiguous()
+            inp_img = torch.from_numpy(inp_img).to(self.device_type).float().contiguous()
         lang_goal = inp['lang_goal'] 
 
         out = self.attention.forward(inp_img.float(), lang_goal, softmax=softmax)
@@ -52,7 +52,7 @@ class TwoStreamClipLingUNetTransporterAgent(TransporterAgent):
     def attn_training_step(self, frame, backprop=True, compute_err=False):
         inp_img = frame['img']
         if type(inp_img) is not torch.Tensor:
-            inp_img = torch.from_numpy(inp_img).to('cpu').float()
+            inp_img = torch.from_numpy(inp_img).to(self.device_type).float()
         p0, p0_theta = frame['p0'], frame['p0_theta']
         lang_goal = frame['lang_goal']
 
@@ -63,7 +63,7 @@ class TwoStreamClipLingUNetTransporterAgent(TransporterAgent):
     def trans_forward(self, inp, softmax=True):
         inp_img = inp['inp_img']
         if type(inp_img) is not torch.Tensor:
-            inp_img = torch.from_numpy(inp_img).to('cpu').float()               
+            inp_img = torch.from_numpy(inp_img).to(self.device_type).float()               
         p0 = inp['p0']
         lang_goal = inp['lang_goal']
         out = self.transport.forward(inp_img.float(), p0, lang_goal, softmax=softmax)

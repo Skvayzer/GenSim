@@ -20,8 +20,8 @@ import IPython
 class TransporterAgent(LightningModule):
     def __init__(self, name, cfg, train_ds, test_ds):
         super().__init__()
-        self.validation_step_outputs = []
         self.training_step_outputs = []
+        self.validation_step_outputs = []
 
         utils.set_seed(0)
         self.automatic_optimization=False 
@@ -72,7 +72,7 @@ class TransporterAgent(LightningModule):
 
     def cross_entropy_with_logits(self, pred, labels, reduction='mean'):
         # Lucas found that both sum and mean work equally well
-        x = (-labels.reshape(len(labels), -1) * F.log_softmax(pred.reshape(len(labels), -1), -1))
+        x = (-labels.view(len(labels), -1) * F.log_softmax(pred.view(len(labels), -1), -1))
         if reduction == 'sum':
             return x.sum()
         elif reduction == 'mean':
@@ -197,8 +197,7 @@ class TransporterAgent(LightningModule):
             with torch.no_grad():
                 place_conf = self.trans_forward(inp)
                 # pick the first batch
-                # print("place conf \n\n\n\n\n", place_conf)
-                # place_conf = place_conf[0]
+                place_conf = place_conf[0]
                 q = q[0]
                 theta = theta[0]
                 place_conf = place_conf.permute(1, 2, 0)
@@ -220,7 +219,6 @@ class TransporterAgent(LightningModule):
 
         self.attention.train()
         self.transport.train()
-        print('TRAIN STEP')
 
         frame, _ = batch
         self.start_time = time.time()
@@ -238,6 +236,7 @@ class TransporterAgent(LightningModule):
 
         total_loss = loss0 + loss1
         self.training_step_outputs.append(total_loss)
+
         self.total_steps = step
         self.start_time = time.time()
         self.log('tr/attn/loss', loss0)
@@ -265,15 +264,11 @@ class TransporterAgent(LightningModule):
     def validation_step(self, batch, batch_idx):
         self.attention.eval()
         self.transport.eval()
-        print('VAL STEP')
 
         loss0, loss1 = 0, 0
         assert self.val_repeats >= 1
         for i in range(self.val_repeats):
-            # print('\n\n\nbatch', batch, '\n\n\n')
             frame, _ = batch
-            # frame = batch[0]
-
             l0, err0 = self.attn_training_step(frame, backprop=False, compute_err=True)
             loss0 += l0
             if isinstance(self.transport, Attention):
@@ -286,9 +281,7 @@ class TransporterAgent(LightningModule):
         loss1 /= self.val_repeats
         val_total_loss = loss0 + loss1
 
-        self.validation_step_outputs.append(val_total_loss)
-
-        return dict(
+        all_outputs = dict(
             val_loss=val_total_loss,
             val_loss0=loss0,
             val_loss1=loss1,
@@ -297,52 +290,49 @@ class TransporterAgent(LightningModule):
             val_trans_dist_err=err1['dist'],
             val_trans_theta_err=err1['theta'],
         )
+        self.validation_step_outputs.append(all_outputs)
+
+
+        return all_outputs
 
     def on_train_epoch_end(self):
-        # super().training_epoch_end(all_outputs)
-        utils.set_seed(self.trainer.current_epoch+1)
         epoch_average = torch.stack(self.training_step_outputs).mean()
-        self.log("training_epoch_average", epoch_average)
-        print('TRAIN EPOCH END')
         self.training_step_outputs.clear()  # free memory
+        utils.set_seed(self.trainer.current_epoch+1)
 
     def on_validation_epoch_end(self):
         all_outputs = self.validation_step_outputs
-        # mean_val_total_loss = np.mean([v['val_loss'].item() for v in all_outputs])
-        # mean_val_loss0 = np.mean([v['val_loss0'].item() for v in all_outputs])
-        # mean_val_loss1 = np.mean([v['val_loss1'].item() for v in all_outputs])
-        # total_attn_dist_err = np.sum([v['val_attn_dist_err'].sum() for v in all_outputs])
-        # total_attn_theta_err = np.sum([v['val_attn_theta_err'].sum() for v in all_outputs])
-        # total_trans_dist_err = np.sum([v['val_trans_dist_err'].sum() for v in all_outputs])
-        # total_trans_theta_err = np.sum([v['val_trans_theta_err'].sum() for v in all_outputs])
+
+
+        mean_val_total_loss = np.mean([v['val_loss'].item() for v in all_outputs])
+        mean_val_loss0 = np.mean([v['val_loss0'].item() for v in all_outputs])
+        mean_val_loss1 = np.mean([v['val_loss1'].item() for v in all_outputs])
+        total_attn_dist_err = np.sum([v['val_attn_dist_err'].sum() for v in all_outputs])
+        total_attn_theta_err = np.sum([v['val_attn_theta_err'].sum() for v in all_outputs])
+        total_trans_dist_err = np.sum([v['val_trans_dist_err'].sum() for v in all_outputs])
+        total_trans_theta_err = np.sum([v['val_trans_theta_err'].sum() for v in all_outputs])
      
 
-        # self.log('vl/attn/loss', mean_val_loss0)
-        # self.log('vl/trans/loss', mean_val_loss1)
-        # self.log('vl/loss', mean_val_total_loss)
-        # self.log('vl/total_attn_dist_err', total_attn_dist_err)
-        # self.log('vl/total_attn_theta_err', total_attn_theta_err)
-        # self.log('vl/total_trans_dist_err', total_trans_dist_err)
-        # self.log('vl/total_trans_theta_err', total_trans_theta_err)
+        self.log('vl/attn/loss', mean_val_loss0)
+        self.log('vl/trans/loss', mean_val_loss1)
+        self.log('vl/loss', mean_val_total_loss)
+        self.log('vl/total_attn_dist_err', total_attn_dist_err)
+        self.log('vl/total_attn_theta_err', total_attn_theta_err)
+        self.log('vl/total_trans_dist_err', total_trans_dist_err)
+        self.log('vl/total_trans_theta_err', total_trans_theta_err)
 
-        # print("\nAttn Err - Dist: {:.2f}, Theta: {:.2f}".format(total_attn_dist_err, total_attn_theta_err))
-        # print("Transport Err - Dist: {:.2f}, Theta: {:.2f}".format(total_trans_dist_err, total_trans_theta_err))
-
-        epoch_average = torch.stack(self.validation_step_outputs).mean()
-        self.log("validation_epoch_average", epoch_average)
-        print('VAL EPOCH END')
-
+        print("\nAttn Err - Dist: {:.2f}, Theta: {:.2f}".format(total_attn_dist_err, total_attn_theta_err))
+        print("Transport Err - Dist: {:.2f}, Theta: {:.2f}".format(total_trans_dist_err, total_trans_theta_err))
+        
         self.validation_step_outputs.clear()  # free memory
-
         return dict(
-            epoch_average = epoch_average
-            # val_loss=mean_val_total_loss,
-            # val_loss0=mean_val_loss0,
-            # mean_val_loss1=mean_val_loss1,
-            # total_attn_dist_err=total_attn_dist_err,
-            # total_attn_theta_err=total_attn_theta_err,
-            # total_trans_dist_err=total_trans_dist_err,
-            # total_trans_theta_err=total_trans_theta_err,
+            val_loss=mean_val_total_loss,
+            val_loss0=mean_val_loss0,
+            mean_val_loss1=mean_val_loss1,
+            total_attn_dist_err=total_attn_dist_err,
+            total_attn_theta_err=total_attn_theta_err,
+            total_trans_dist_err=total_trans_dist_err,
+            total_trans_theta_err=total_trans_theta_err,
         )
 
     def act(self, obs, info=None, goal=None):  # pylint: disable=unused-argument

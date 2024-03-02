@@ -487,13 +487,11 @@ def build_model(state_dict: dict):
         context_length, vocab_size, transformer_width, transformer_heads, transformer_layers
     )
 
-    for key in ["input_resolution", "context_length", "vocab_size"]:
-        if key in state_dict.keys():
-            del state_dict[key]
+    # for key in ["input_resolution", "context_length", "vocab_size"]:
+    #     del state_dict[key]
 
     convert_weights(model)
-    model.load_state_dict(state_dict)
-    model = model.to(torch.float)
+    model.load_state_dict(state_dict, strict=False)
     return model.eval()
 
 
@@ -606,7 +604,7 @@ def tokenize(texts: Union[str, List[str]], context_length: int = 77):
 
     sot_token = _tokenizer.encoder["<|startoftext|>"]
     eot_token = _tokenizer.encoder["<|endoftext|>"]
-    all_tokens = [[sot_token] + _tokenizer.encode(text) + [eot_token] for text in texts]
+    all_tokens = [[sot_token] + _tokenizer.encode([text]) + [eot_token] for text in texts]
     result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
 
     for i, tokens in enumerate(all_tokens):
