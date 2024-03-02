@@ -1,20 +1,20 @@
 # HOW TO INSTALL FOR TRAINING?
 ```bash
-{
+
   python3 -m venv .venv
   source .venv/bin/activate
   pip install -r requirements.txt
   python setup.py develop
   export CLIPORT_ROOT=$(pwd)/'cliport'
   export GENSIM_ROOT=$(pwd)
-}
+
 ```
 Please, specify the training data directory in ```cliport/cfg/my_train.yaml```
 ```bash
-{
+
   cd cliport
   python my_train.py
-}
+
 ```
 
 # GenSim: Generating Robotic Simulation Tasks via Large Language Models
