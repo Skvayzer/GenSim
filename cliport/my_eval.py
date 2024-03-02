@@ -11,6 +11,7 @@ from cliport import dataset
 from cliport import tasks
 from cliport.utils import utils
 from cliport.environments.environment import Environment
+import torch
 
 
 @hydra.main(config_path='./cfg', config_name='eval')
@@ -42,6 +43,24 @@ def main(vcfg):
                                             mode=mode,
                                             n_demos=vcfg['n_demos'],
                                             augment=False)
+    elif 'my' in dataset_type:
+        data_dir = vcfg['data_dir']
+        # tsk_name = 'data'
+        # list_IDs = range(1000)
+        # training_sets = []
+        # training_sets.append(Dataset_Custom(data_path,tsk_name,range(74)))
+        # import torch
+        # train_dev_sets = torch.utils.data.ConcatDataset(training_sets)
+
+        ds = dataset.MyCustomDataset(data_dir, 'data', tcfg, 
+                    n_demos=vcfg['n_demos'], augment=False)
+        # val_ds = MyCustomDataset(data_dir, 'data', cfg, 
+        #             n_demos=n_val, augment=False)
+
+        train_size = int(0.9 * len(ds))
+        val_size = len(ds) - train_size
+        print("TRAIN/VAL SIZE: ", train_size, val_size)
+        _, ds = torch.utils.data.random_split(ds, [train_size, val_size])
     else:
         ds = dataset.RavensDataset(os.path.join(vcfg['data_dir'], f"{eval_task}-{mode}"),
                                    tcfg,

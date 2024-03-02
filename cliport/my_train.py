@@ -96,8 +96,7 @@ def main(cfg):
         import torch.multiprocessing
         torch.multiprocessing.set_sharing_strategy('file_system')
 
-    # n_demos = cfg['train']['n_demos']
-    # n_demos = cfg['train']['n_demos']
+
     n_val = cfg['train']['n_val']
     name = '{}-{}-{}'.format(task, agent_type, n_demos)
             
@@ -112,22 +111,12 @@ def main(cfg):
         val_ds = RavenMultiTaskDatasetBalance(data_dir, cfg, group=task, mode='val', n_demos=n_val, augment=False)
     elif 'my' in dataset_type:
         data_dir = cfg['train']['train_dir']
-        # tsk_name = 'data'
-        # list_IDs = range(1000)
-        # training_sets = []
-        # training_sets.append(Dataset_Custom(data_path,tsk_name,range(74)))
-        # import torch
-        # train_dev_sets = torch.utils.data.ConcatDataset(training_sets)
 
-        ds = MyCustomDataset(data_dir, 'data', cfg, 
+        train_ds = MyCustomDataset(os.path.join(data_dir, 'train'), 'data', cfg, 
                     n_demos=n_demos, augment=False)
-        # val_ds = MyCustomDataset(data_dir, 'data', cfg, 
-        #             n_demos=n_val, augment=False)
-
-        train_size = int(0.9 * len(ds))
-        val_size = len(ds) - train_size
-        print("TRAIN/VAL SIZE: ", train_size, val_size)
-        train_ds, val_ds = torch.utils.data.random_split(ds, [train_size, val_size])
+        val_ds = MyCustomDataset(os.path.join(data_dir, 'val'), 'data', cfg, 
+                    n_demos=n_val, augment=False)
+        print("TRAIN/VAL SIZE: ", len(train_ds), len(val_ds))
 
 
     else:

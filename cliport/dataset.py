@@ -1006,6 +1006,7 @@ class MyCustomDataset(Dataset):
                 if '.db' in fname:
                     seed = int(fname[:fname.find('.')][-4:])
                     self.n_episodes += 1
+                    self.sample_set.append(seed)
                     self.max_seed = max(self.max_seed, seed)
 
         self._cache = {}
@@ -1020,8 +1021,8 @@ class MyCustomDataset(Dataset):
                 print(f"Requested training on {self.n_demos} demos, but only {self.n_episodes} demos exist in the dataset path: {self._path}.")
                 self.n_demos = self.n_episodes
 
-            episodes = np.random.choice(range(self.n_episodes), self.n_demos, False)
-            self.set(episodes)
+            # episodes = np.random.choice(range(self.n_episodes), self.n_demos, False)
+            # self.set(episodes)
 
 
     def add(self, seed, episode):
