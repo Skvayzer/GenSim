@@ -9,7 +9,7 @@
   export GENSIM_ROOT=$(pwd)
 
 ```
-Please, specify the training data directory in ```cliport/cfg/my_train.yaml```
+Please, specify the training data directory in ```cliport/cfg/train.yaml```
 ```bash
 
   cd cliport
