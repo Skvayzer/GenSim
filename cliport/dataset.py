@@ -1065,7 +1065,8 @@ class MyCustomDataset(Dataset):
         """Limit random samples to specific fixed set."""
         self.sample_set = episodes
 
-    def load(self, episode_id, images=True, cache=False):
+    def load(self, episode_id, images=True, cache=False, direct=False):
+        if direct: episode_id = episode_id = self.sample_set[episode_id]
         # TODO(lirui): consider loading into memory
         def load_episode(episode_id, fname):
 

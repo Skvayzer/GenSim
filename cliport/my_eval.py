@@ -127,8 +127,8 @@ def main(vcfg):
             # Run testing and save total rewards with last transition info.
             for i in range(0, n_demos):
                 print(f'Test: {i + 1}/{n_demos}')
-                print(agent.test_ds.load(i))
-                episode, seed = agent.test_ds.load(i)
+                # print(agent.test_ds.load(i))
+                episode, seed = agent.test_ds.load(i, direct=True)
                 goal = episode[-1]
                 total_reward = 0
                 np.random.seed(seed)
