@@ -1076,7 +1076,7 @@ class MyCustomDataset(Dataset):
                     return self._cache[episode_id]
                 else:
                     self._cache[episode_id] = {}
-
+            print("torch episode load")
             # Load sample from files.
             data = torch.load(self._path+'/'+fname)
             if cache:
@@ -1092,7 +1092,7 @@ class MyCustomDataset(Dataset):
             print("fname: ", fname)
             if f'{episode_id:04d}' in fname:
                 seed = int(fname[:fname.find('.')][-4:])
-
+        
                 # Load data.
                 episode = load_episode(episode_id, fname)
                 colors = episode[0]
