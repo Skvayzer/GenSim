@@ -158,7 +158,7 @@ def main(vcfg):
                 steps_took = 0
                 for _ in range(task.max_steps):
                     steps_took += 1
-                    print(len(obs['color']))
+                    print(obs['color'][0].shape)
                     act = agent.act(obs, info, goal)
                     lang_goal = info['lang_goal']
                     print(f'Lang Goal: {lang_goal}')
