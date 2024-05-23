@@ -1086,6 +1086,7 @@ class MyCustomDataset(Dataset):
         seed = None
         # path = os.path.join(self._path, 'action')
         for fname in sorted(os.listdir(self._path)):
+            print("fname: ", fname)
             if f'{episode_id:04d}' in fname:
                 seed = int(fname[:fname.find('.')][-4:])
 
@@ -1256,6 +1257,7 @@ class MyCustomDataset(Dataset):
         # else:
         #     episode_id = np.random.choice(range(self.n_episodes))
         episode_id = self.sample_set[idx]
+        print("episode_id: ", episode_id)
         res = self.load(episode_id, self.images, self.cache)
         if res is None:
             print("in get item", episode_id,   self._path)
