@@ -353,7 +353,7 @@ class TransporterAgent(LightningModule):
             self.save_checkpoint(ckpt_path)
         
         self.validation_step_outputs.clear()  # free memory
-        return dic(
+        return dict(
             val_loss=mean_val_total_loss,
             val_loss0=mean_val_loss0,
             mean_val_loss1=mean_val_loss1,
