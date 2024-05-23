@@ -64,7 +64,7 @@ def main(vcfg):
                                    augment=False)
         
     test_loader = DataLoader(ds, shuffle=False,
-            num_workers=11,
+            num_workers=0,
             batch_size=vcfg['batch_size'],
             pin_memory=True)
     
