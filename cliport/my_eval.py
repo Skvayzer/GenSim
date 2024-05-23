@@ -88,7 +88,7 @@ def main(vcfg):
             existing_results = json.load(f)
 
     # Make a list of checkpoints to eval.
-    ckpts_to_eval = list_ckpts_to_eval(vcfg, existing_results)
+    ckpts_to_eval = ['best_epoch=12_vl_loss=0.00.ckpt'] #list_ckpts_to_eval(vcfg, existing_results)
 
     # Evaluation loop
     print(f"Evaluating: {str(ckpts_to_eval)}")
