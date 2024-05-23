@@ -20,8 +20,8 @@ train:
   model_task: ${train.task}
   exp_folder: exps
   # insert here your train data path
-  train_dir: /home/constantin/thesis/GenSim/data/GenSim_Data_Train/${train.task} # /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/data  #${root_dir}/${train.exp_folder}/${train.model_task}-${train.agent}-n${train.n_demos}-train
-  data_dir: ${train_dir}/data
+  train_dir: /home/constantin/thesis/GenSim/data/GenSim_Data_Train/towers-of-hanoi # /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/data  #${root_dir}/${train.exp_folder}/${train.model_task}-${train.agent}-n${train.n_demos}-train
+  data_dir: /home/constantin/thesis/GenSim/data/GenSim_Data_Train/towers-of-hanoi
 
   # task configs
   task: towers-of-hanoi #stack-block-pyramid-seq-seen-colors # GenSim_buildcar_trajectories # 
