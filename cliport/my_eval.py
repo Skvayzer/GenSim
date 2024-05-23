@@ -67,6 +67,8 @@ def main(vcfg):
             num_workers=11,
             batch_size=vcfg['batch_size'],
             pin_memory=True)
+    
+    print("Eval dataset length: ", len(test_loader))
 
 
     all_results = {}
