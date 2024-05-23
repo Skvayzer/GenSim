@@ -1076,7 +1076,7 @@ class MyCustomDataset(Dataset):
                     return self._cache[episode_id]
                 else:
                     self._cache[episode_id] = {}
-            print("torch episode load")
+            # print("torch episode load")
             # Load sample from files.
             data = torch.load(self._path+'/'+fname)
             if cache:
@@ -1086,13 +1086,13 @@ class MyCustomDataset(Dataset):
         # Get filename and random seed used to initialize episode.
         seed = None
         # path = os.path.join(self._path, 'action')
-        print("\n\nepisode_id: ", episode_id)
-        print("\n\n sample set: ", self.sample_set)
+        # print("\n\nepisode_id: ", episode_id)
+        # print("\n\n sample set: ", self.sample_set)
         for fname in sorted(os.listdir(self._path)):
-            print("fname: ", fname)
+            # print("fname: ", fname)
             if f'{episode_id:04d}' in fname:
                 seed = int(fname[:fname.find('.')][-4:])
-        
+
                 # Load data.
                 episode = load_episode(episode_id, fname)
                 colors = episode[0]
@@ -1260,8 +1260,8 @@ class MyCustomDataset(Dataset):
         # else:
         #     episode_id = np.random.choice(range(self.n_episodes))
         episode_id = self.sample_set[idx]
-        print("\n\nepisode_id: ", episode_id)
-        print("\n\n sample set: ", self.sample_set)
+        # print("\n\nepisode_id: ", episode_id)
+        # print("\n\n sample set: ", self.sample_set)
         res = self.load(episode_id, self.images, self.cache)
         if res is None:
             print("in get item", episode_id,   self._path)
