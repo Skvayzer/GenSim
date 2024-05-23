@@ -23,7 +23,7 @@ shared_memory: False
 eval_task: stack-block-pyramid # task to evaluate the model on
 model_task: stack-block-pyramid # task the model was trained on (e.g. multi-language-conditioned or packing-boxes-pairs-seen-colors)
 type: my # 'single' or 'multi' or 'my'
-batch_size: 4
+batch_size: 3
 
 # paths
 model_dir: ${root_dir}
