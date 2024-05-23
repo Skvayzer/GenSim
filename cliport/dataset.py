@@ -1085,6 +1085,8 @@ class MyCustomDataset(Dataset):
         # Get filename and random seed used to initialize episode.
         seed = None
         # path = os.path.join(self._path, 'action')
+        print("\n\nepisode_id: ", episode_id)
+        print("\n\n sample set: ", self.sample_set)
         for fname in sorted(os.listdir(self._path)):
             print("fname: ", fname)
             if f'{episode_id:04d}' in fname:
