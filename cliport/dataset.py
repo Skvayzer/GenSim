@@ -1257,7 +1257,8 @@ class MyCustomDataset(Dataset):
         # else:
         #     episode_id = np.random.choice(range(self.n_episodes))
         episode_id = self.sample_set[idx]
-        print("episode_id: ", episode_id)
+        print("\n\nepisode_id: ", episode_id)
+        print("\n\n sample set: ", self.sample_set)
         res = self.load(episode_id, self.images, self.cache)
         if res is None:
             print("in get item", episode_id,   self._path)
