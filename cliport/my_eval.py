@@ -53,7 +53,7 @@ def main(vcfg):
         # import torch
         # train_dev_sets = torch.utils.data.ConcatDataset(training_sets)
 
-        ds = dataset.MyCustomDataset(os.path.join(data_dir, 'train'), 'data', tcfg, 
+        ds = dataset.MyCustomDataset(os.path.join(data_dir, 'val'), 'data', tcfg, 
                     n_demos=vcfg['n_demos'], augment=False)
 
     
