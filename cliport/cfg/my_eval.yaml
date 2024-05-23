@@ -10,35 +10,36 @@ mode: test # 'val' or 'test'
 # eval settings
 agent: cliport
 n_demos: 100 # number of val instances
-train_demos: 1000 # training demos used to train model
-n_repeats: 1000 # number of repeats
+train_demos: 900 # training demos used to train model
+n_repeats: 1 # number of repeats
 gpu: [0]
 save_results: True # write results to json
 update_results: False # overwrite existing json results?
-checkpoint_type: 'val_missing'
+checkpoint_type: 'last_without_depth'
 val_on_heldout: True
 
 disp: False
 shared_memory: False
 eval_task: build-car # task to evaluate the model on
 model_task: build-car # task the model was trained on (e.g. multi-language-conditioned or packing-boxes-pairs-seen-colors)
-type: single # 'single' or 'multi'
+type: my # 'single' or 'multi' or 'my'
+batch_size: 1
 
 # paths
 model_dir: ${root_dir}
 exp_folder: exps
-data_dir: ${root_dir}/data
+data_dir: /GenSim/data/GenSim_Data_Train/build-car/data/ # /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/data #/home/cosmos/VScode Projects/coglab/GenSim/data/ 
 assets_root: ${root_dir}/environments/assets/
 
-model_path: ${model_dir}/${exp_folder}/${model_task}-${agent}-n${train_demos}-train/checkpoints/ # path to pre-trained models
-train_config: ${model_dir}/${exp_folder}/${model_task}-${agent}-n${train_demos}-train/.hydra/config.yaml # path to train config
-save_path: ${model_dir}/${exp_folder}/${eval_task}-${agent}-n${train_demos}-train/checkpoints/ # path to save results
-results_path: ${model_dir}/${exp_folder}/${eval_task}-${agent}-n${train_demos}-train/checkpoints/ # path to existing results
+model_path: /GenSim/data/GenSim_Data_Train/build-car/checkpoints/ # /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/checkpoints_without_depth/checkpoints/ #${model_dir}/${exp_folder}/${model_task}-${agent}-n${train_demos}-train/checkpoints/ # path to pre-trained models
+train_config: /GenSim/cliport/cfg/train.yaml # /home/cosmos/VScode Projects/coglab/GenSim/cliport/cfg/train.yaml  #${model_dir}/${exp_folder}/${model_task}-${agent}-n${train_demos}-train/.hydra/config.yaml # path to train config
+save_path: GenSim/data/GenSim_Data_Train/build-car/data/checkpoints/  #${model_dir}/${exp_folder}/${eval_task}-${agent}-n${train_demos}-train/checkpoints/ # path to save results
+results_path: GenSim/data/GenSim_Data_Train/build-car/data/checkpoints/  # /GenSim/data/GenSim_Data_Train/build-car/checkpoints/ # ${model_dir}/${exp_folder}/${eval_task}-${agent}-n${train_demos}-train/checkpoints/ # path to existing results
 
 
 # record videos (super slow)
 record:
-  save_video: True
+  save_video: False
   save_video_path: ${model_dir}/videos/${exp_folder}/${eval_task}-${agent}-n${train_demos}-train/videos/
   add_text: False
   add_task_text: True

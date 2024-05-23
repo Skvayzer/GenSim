@@ -39,7 +39,9 @@ class BuildCar(Task):
         body_block_urdf = "box/box-template.urdf"
         body_block_urdf = self.fill_template(body_block_urdf,  {'DIM': body_size})
         body_block_pose = self.get_random_pose(env, body_size)
-        body_block_id = env.add_object(body_block_urdf, body_block_pose, color=utils.COLORS['blue'])
+
+        body_block_id = env.add_object(body_block_urdf, ([0.503125, -0.22499999999999998, 0.01], body_block_pose[1]), color=utils.COLORS['blue'])
+        
         anchor_body_poses = [car_pose]
 
         wheel_length = 0.12

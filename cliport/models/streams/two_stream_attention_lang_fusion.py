@@ -47,7 +47,7 @@ class TwoStreamAttentionLangFusion(Attention):
         in_tens = torch.nn.functional.pad(in_tens, tuple(self.padding[[2,1,0]].reshape(-1)), mode='constant')
 
         # Rotation pivot.
-        pv = np.array(in_tens.shape[1:3]) // 2
+        pv = np.array(in_tens.shape[1:3]) // 2 # central pixel
 
         # Rotate input.
         in_tens = in_tens.permute(0, 3, 1, 2)  # [B 6 W H]
@@ -83,9 +83,9 @@ class TwoStreamAttentionLangFusionLat(TwoStreamAttentionLangFusion):
         super().__init__(stream_fcn, in_shape, n_rotations, preprocess, cfg, device)
 
     def attend(self, x, l):
-        x1, lat = self.attn_stream_one(x)
-        x2 = self.attn_stream_two(x, lat, l)
-        x = self.fusion(x1, x2)
+        x1, lat = self.attn_stream_one(x) # [B, 1, W, W]
+        x2 = self.attn_stream_two(x, lat, l) # [B, 1, W, W]
+        x = self.fusion(x1, x2) # x1 + x2, [B, 1, W, W]
         return x
 
 

@@ -240,7 +240,7 @@ class Task():
             if len(self.obj_points_cache) == 0 or objs[0][0] not in self.obj_points_cache:
                 for obj_id, _ in objs:
                     self.obj_points_cache[obj_id] = self.get_box_object_points(obj_id)
-
+            print(zones)
             for zone_idx, (zone_pose, zone_size) in enumerate(zones):
                 # Count valid points in zone.
                 for (obj_id, _) in objs:

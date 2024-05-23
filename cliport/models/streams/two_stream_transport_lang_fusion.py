@@ -82,15 +82,43 @@ class TwoStreamTransportLangFusionLat(TwoStreamTransportLangFusion):
         super().__init__(stream_fcn, in_shape, n_rotations, crop_size, preprocess, cfg, device)
 
     def transport(self, in_tensor, crop, l):
-        key_out_one, key_lat_one = self.key_stream_one(in_tensor)
+        key_out_one, key_lat_one = self.key_stream_one(in_tensor) 
         key_out_two = self.key_stream_two(in_tensor, key_lat_one, l)
         logits = self.fusion_key(key_out_one, key_out_two)
 
-        query_out_one, query_lat_one = self.query_stream_one(crop)
+        query_out_one, query_lat_one = self.query_stream_one(crop) 
         query_out_two = self.query_stream_two(crop, query_lat_one, l)
         kernel = self.fusion_query(query_out_one, query_out_two)
 
         return logits, kernel
+    
+    #  def transport(self, in_tensor, crop, l):
+    #     key_out_one, key_lat_one = self.key_ResNet43_8s(in_tensor) # [B, 3, W + crop_size, H + crop_size], [5, B, 512, 48, 28]
+    #     key_out_two = self.key_CLIPLingUNet(in_tensor, key_lat_one, l) # [B, 3, W + crop_size, H + crop_size]
+    #     logits = self.fusion_key_convolutional(key_out_one, key_out_two) # [B, 3, W + crop_size, H + crop_size]
+
+    #     query_out_one, query_lat_one = self.query_ResNet43_8s(crop) # [B* n_rotations, 3, crop_size, crop_size], [5, B*n_rotations, 512, 8, 8]
+    #     query_out_two = self.query_CLIPLingUNet(crop, query_lat_one, l) # [B* n_rotations, 3, crop_size, crop_size]
+    #     kernel = self.fusion_query_convolutional(query_out_one, query_out_two) # [B* n_rotations, 3, crop_size, crop_size]
+
+    #     return logits, kernel
+    
+    # class FusionConv(Fusion):
+    #     """ 1x1 convs after [x1; x2] """
+
+    #     def __init__(self, input_dim=3):
+    #         super(FusionConv, self).__init__(input_dim=input_dim)
+    #         self.conv = nn.Sequential(
+    #             nn.ReLU(True),
+    #             nn.Conv2d(input_dim * 2, input_dim, kernel_size=1, bias=False)
+    #         )
+
+    #     def forward(self, x1, x2, x2_mask=None, x2_proj=None):
+    #         if x1.shape != x2.shape and len(x1.shape) != len(x2.shape):
+    #             x2 = self.tile_x2(x1, x2, x2_proj)
+    #         x = torch.cat([x1, x2], dim=1)  # [B, 2C, H, W]
+    #         x = self.conv(x)                # [B, C, H, W]
+    #         return x
     
     
 class TwoStreamTransportLangFusionLatReduce(TwoStreamTransportLangFusionLat):

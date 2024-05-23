@@ -50,19 +50,19 @@ class Transport(nn.Module):
         print(f"Transport FCN: {stream_one_fcn}")
 
     def correlate(self, in0, in1, softmax):
-        """Correlate two input tensors."""
-        output = F.conv2d(in0, in1, padding=(self.pad_size, self.pad_size))
-        output = F.interpolate(output, size=(in0.shape[-2], in0.shape[-1]), mode='bilinear')
-        output = output[:,:,self.pad_size:-self.pad_size, self.pad_size:-self.pad_size]
+        """Correlate two input tensors.""" #pad_size = crop_size/2 = 32
+        output = F.conv2d(in0, in1, padding=(self.pad_size, self.pad_size)) # [2 ,72, 385, 225]
+        output = F.interpolate(output, size=(in0.shape[-2], in0.shape[-1]), mode='bilinear') # [2, 72, 384, 224]
+        output = output[:,:,self.pad_size:-self.pad_size, self.pad_size:-self.pad_size] # [2, 72, 320, 160]
         output_shape = output.shape
 
         # a hack around the batch size 1. The shape needs to tile back.
-        channel_num = in1.shape[0] // in0.shape[0]
-        output = torch.stack([output[i,i*channel_num:(i+1)*channel_num] for i in range(len(output))], dim=0)
+        channel_num = in1.shape[0] // in0.shape[0] # = 36
+        output = torch.stack([output[i,i*channel_num:(i+1)*channel_num] for i in range(len(output))], dim=0) # [B, n_rotations, W, H]
         if softmax:
             output = output.reshape((len(output), -1))
             output = F.softmax(output, dim=-1)
-        output = output.reshape(len(output),channel_num,output_shape[2],output_shape[3])
+        output = output.reshape(len(output),channel_num,output_shape[2],output_shape[3]) # [B, n_rotations, W, H]
 
         return output
 

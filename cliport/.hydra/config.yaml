@@ -1,24 +1,42 @@
 root_dir: ${oc.env:CLIPORT_ROOT}
 tag: default
 debug: false
-data_dir: ${root_dir}/data
-assets_root: ${root_dir}/environments/assets/
+mode: test
+agent: cliport
+n_demos: 100
+train_demos: 900
+n_repeats: 1
+gpu:
+- 0
+save_results: true
+update_results: false
+checkpoint_type: last_without_depth
+val_on_heldout: true
 disp: false
 shared_memory: false
-task: stack-block-pyramid-seq-seen-colors
-mode: val
-'n': 1000
-save_data: true
+eval_task: build-car
+model_task: build-car
+type: my
+model_dir: ${root_dir}
+exp_folder: exps
+data_dir: /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/data
+assets_root: ${root_dir}/environments/assets/
+model_path: /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/checkpoints_without_depth/checkpoints/
+train_config: /home/cosmos/VScode Projects/coglab/GenSim/cliport/cfg/train.yaml
+save_path: GenSim/data/GenSim_Data_Train/build-car/data/checkpoints/
+results_path: GenSim/data/GenSim_Data_Train/build-car/data/checkpoints/
+record:
+  save_video: false
+  save_video_path: ${model_dir}/videos/${exp_folder}/${eval_task}-${agent}-n${train_demos}-train/videos/
+  add_text: false
+  fps: 20
+  video_height: 640
+  video_width: 720
+  add_task_text: true
+batch_size: 1
 dataset:
   type: single
   images: true
   cache: true
   augment:
     theta_sigma: 60
-record:
-  save_video: false
-  save_video_path: ${data_dir}/${task}-${mode}/videos/
-  add_text: false
-  fps: 20
-  video_height: 640
-  video_width: 720

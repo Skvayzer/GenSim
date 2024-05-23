@@ -9,7 +9,7 @@ from cliport.dataset import RavensDataset, RavensMultiTaskDataset, RavenMultiTas
 
 import hydra
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 import numpy as np
 from torch.utils.data import DataLoader
@@ -48,15 +48,27 @@ def main(cfg):
     checkpoint_path = os.path.join(cfg['train']['data_dir'], 'checkpoints')
     last_checkpoint_path = os.path.join(checkpoint_path, 'last.ckpt')
     last_checkpoint = last_checkpoint_path if os.path.exists(last_checkpoint_path) and cfg['train']['load_from_last_ckpt'] else None
-    checkpoint_callback = [ModelCheckpoint(
+    checkpoint_callback = ModelCheckpoint(
         monitor=cfg['wandb']['saver']['monitor'],
         dirpath=os.path.join(checkpoint_path, 'best_{epoch:02d}'),
+        filename="best_{epoch:02d}_{val_loss:.2f}",
         mode='min',
         save_top_k=3,
         every_n_epochs=1,
-        save_last=True,
+        verbose=True,
+        # save_last=True,
         # every_n_train_steps=1    
-        )]
+        )
+    
+    # EarlyStopping callback
+    early_stopping_callback = EarlyStopping(
+        monitor='vl/loss',
+        mode='min',
+        patience=5,  # Number of epochs with no improvement after which training will be stopped
+        verbose=True
+    )
+
+    callbacks = [checkpoint_callback, early_stopping_callback]
 
     # Trainer
     max_epochs = cfg['train']['n_steps'] * cfg['train']['batch_size'] // cfg['train']['n_demos']
@@ -70,12 +82,12 @@ def main(cfg):
         accelerator=device,
         fast_dev_run=cfg['debug'],
         logger=wandb_logger,
-        callbacks=checkpoint_callback,
+        callbacks=callbacks,
         max_epochs=max_epochs,
         check_val_every_n_epoch=1,
-        # resume_from_checkpoint=last_checkpoint,
+        # resume_from_checkpoint=last_checkpoint,   
         sync_batchnorm=True,
-        log_every_n_steps=1,  
+        log_every_n_steps=30,  
         enable_checkpointing=True      
     )
 
@@ -137,9 +149,9 @@ def main(cfg):
     train_loader = DataLoader(train_ds, shuffle=True,
                     pin_memory=True,
                     batch_size=cfg['train']['batch_size'],
-                    num_workers=11 )
+                    num_workers=0 )
     test_loader = DataLoader(val_ds, shuffle=False,
-                num_workers=11,
+                num_workers=0,
                 batch_size=cfg['train']['batch_size'],
                 pin_memory=True)
 

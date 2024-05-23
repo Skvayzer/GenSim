@@ -31,8 +31,8 @@ class TransporterAgent(LightningModule):
         self.train_loader = train_ds
         self.test_loader = test_ds
 
-        self.train_ds = train_ds.dataset
-        self.test_ds = test_ds.dataset
+        self.train_ds = train_ds.dataset if train_ds is not None else None
+        self.test_ds = test_ds.dataset if test_ds is not None else None
 
         self.name = name
         self.task = cfg['train']['task']
@@ -49,6 +49,8 @@ class TransporterAgent(LightningModule):
         self.save_steps = cfg['train']['save_steps']
 
         self._build_model()
+        self.best_val_loss = float('inf')  # Initialize best validation loss to infinity
+        self.best_checkpoint_path = None
         ##
         # reduce the number of parameters here
         ##
@@ -171,7 +173,7 @@ class TransporterAgent(LightningModule):
         inp_img = inp['inp_img']
 
         # label_size = inp_img.shape[:2] + (self.transport.n_rotations,)
-        label_size = inp_img.shape[:3] + (self.transport.n_rotations,)
+        label_size = inp_img.shape[:3] + (self.transport.n_rotations,) # [B, W, H, n_rotations]
         label = torch.zeros(label_size, dtype=torch.float, device=output.device)
 
         # remove this for-loop laters
@@ -179,8 +181,8 @@ class TransporterAgent(LightningModule):
         q[:,1] = torch.clamp(q[:,1], 0, label.shape[2]-1)
 
         for idx, q_i in enumerate(q):
-            label[idx, int(q_i[0]), int(q_i[1]), itheta[idx]] = 1
-        label = label.permute((0, 3, 1, 2)).contiguous()
+            label[idx, int(q_i[0]), int(q_i[1]), itheta[idx]] = 1 # put ones into the correct placement pixels
+        label = label.permute((0, 3, 1, 2)).contiguous() # [B, n_rotations, W, H]
 
         # Get loss.
         loss = self.cross_entropy_with_logits(output, label)
@@ -260,6 +262,22 @@ class TransporterAgent(LightningModule):
         checkpoint_path = os.path.join(self.cfg['train']['train_dir'], 'checkpoints')
         ckpt_path = os.path.join(checkpoint_path, 'last.ckpt')
         self.trainer.save_checkpoint(ckpt_path)
+    
+    def save_checkpoint(self, ckpt_path):
+        """Save model checkpoint and remove the old one."""
+        print(f"Saving new best checkpoint to {ckpt_path}")
+        self.trainer.save_checkpoint(ckpt_path)
+    
+        # Remove the old checkpoint if it exists
+        if self.best_checkpoint_path and self.best_checkpoint_path != ckpt_path:
+            try:
+                os.remove(self.best_checkpoint_path)
+                print(f"Removed old checkpoint {self.best_checkpoint_path}")
+            except OSError as e:
+                print(f"Error removing old checkpoint {self.best_checkpoint_path}: {e}")
+
+        # Update the best checkpoint path
+        self.best_checkpoint_path = ckpt_path
 
     def validation_step(self, batch, batch_idx):
         self.attention.eval()
@@ -315,17 +333,27 @@ class TransporterAgent(LightningModule):
 
         self.log('vl/attn/loss', mean_val_loss0)
         self.log('vl/trans/loss', mean_val_loss1)
-        self.log('vl/loss', mean_val_total_loss)
+        self.log('vl/loss', mean_val_total_loss, prog_bar=True)
+        self.log('val_loss', mean_val_total_loss, prog_bar=True)
         self.log('vl/total_attn_dist_err', total_attn_dist_err)
         self.log('vl/total_attn_theta_err', total_attn_theta_err)
         self.log('vl/total_trans_dist_err', total_trans_dist_err)
         self.log('vl/total_trans_theta_err', total_trans_theta_err)
 
+        print(f"\n\nLogged vl/loss: {mean_val_total_loss}\n\n") 
+
         print("\nAttn Err - Dist: {:.2f}, Theta: {:.2f}".format(total_attn_dist_err, total_attn_theta_err))
         print("Transport Err - Dist: {:.2f}, Theta: {:.2f}".format(total_trans_dist_err, total_trans_theta_err))
+
+        # Check if this is the best validation loss
+        if mean_val_total_loss < self.best_val_loss:
+            self.best_val_loss = mean_val_total_loss
+            checkpoint_dir = os.path.join(self.cfg['train']['train_dir'], 'checkpoints')
+            ckpt_path = os.path.join(checkpoint_dir, f'best_epoch={self.current_epoch:02d}_vl_loss={mean_val_total_loss:.2f}.ckpt')
+            self.save_checkpoint(ckpt_path)
         
         self.validation_step_outputs.clear()  # free memory
-        return dict(
+        return dic(
             val_loss=mean_val_total_loss,
             val_loss0=mean_val_loss0,
             mean_val_loss1=mean_val_loss1,

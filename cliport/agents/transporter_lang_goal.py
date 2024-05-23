@@ -83,7 +83,7 @@ class TwoStreamClipLingUNetTransporterAgent(TransporterAgent):
     def act(self, obs, info, goal=None):  # pylint: disable=unused-argument
         """Run inference and return best action given visual observations."""
         # Get heightmap from RGB-D images.
-        img = self.test_ds.get_image(obs)
+        img = np.concatenate((obs['color'], obs['color']), axis=-1) # self.test_ds.get_image(obs)
         lang_goal = info['lang_goal']
 
         # Attention model forward pass.
@@ -109,6 +109,25 @@ class TwoStreamClipLingUNetTransporterAgent(TransporterAgent):
 
         # Pixels to end effector poses.
         hmap = img[:, :, 3]
+        p0_xyz = utils.pix_to_xyz(p0_pix, hmap, self.bounds, self.pix_size)
+        p1_xyz = utils.pix_to_xyz(p1_pix, hmap, self.bounds, self.pix_size)
+        p0_xyzw = utils.eulerXYZ_to_quatXYZW((0, 0, -p0_theta))
+        p1_xyzw = utils.eulerXYZ_to_quatXYZW((0, 0, -p1_theta))
+
+        return {
+            'pose0': (np.asarray(p0_xyz), np.asarray(p0_xyzw)),
+            'pose1': (np.asarray(p1_xyz), np.asarray(p1_xyzw)),
+            'pick': [p0_pix[0], p0_pix[1], p0_theta],
+            'place': [p1_pix[0], p1_pix[1], p1_theta],
+        }
+
+    def sample_act(self, hmap, p0_pix=[0, 0], p1_pix=[50, 50], p0_rotation=0, p1_rotation=1, n_rotations=36):  # pylint: disable=unused-argument
+        """Run inference and return best action given visual observations."""
+        p0_theta = p0_rotation * (2 * np.pi / n_rotations) # 0 by default
+
+        p1_theta = p1_rotation * (2 * np.pi / n_rotations)
+
+        # Pixels to end effector poses.
         p0_xyz = utils.pix_to_xyz(p0_pix, hmap, self.bounds, self.pix_size)
         p1_xyz = utils.pix_to_xyz(p1_pix, hmap, self.bounds, self.pix_size)
         p0_xyzw = utils.eulerXYZ_to_quatXYZW((0, 0, -p0_theta))

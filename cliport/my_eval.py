@@ -12,9 +12,10 @@ from cliport import tasks
 from cliport.utils import utils
 from cliport.environments.environment import Environment
 import torch
+from torch.utils.data import DataLoader
 
 
-@hydra.main(config_path='./cfg', config_name='eval')
+@hydra.main(config_path='./cfg', config_name='my_eval')
 def main(vcfg):
     # Load train cfg
     tcfg = utils.load_hydra_config(vcfg['train_config'])
@@ -52,24 +53,26 @@ def main(vcfg):
         # import torch
         # train_dev_sets = torch.utils.data.ConcatDataset(training_sets)
 
-        ds = dataset.MyCustomDataset(data_dir, 'data', tcfg, 
+        ds = dataset.MyCustomDataset(os.path.join(data_dir, 'train'), 'data', tcfg, 
                     n_demos=vcfg['n_demos'], augment=False)
-        # val_ds = MyCustomDataset(data_dir, 'data', cfg, 
-        #             n_demos=n_val, augment=False)
 
-        train_size = int(0.9 * len(ds))
-        val_size = len(ds) - train_size
-        print("TRAIN/VAL SIZE: ", train_size, val_size)
-        _, ds = torch.utils.data.random_split(ds, [train_size, val_size])
+    
     else:
         ds = dataset.RavensDataset(os.path.join(vcfg['data_dir'], f"{eval_task}-{mode}"),
                                    tcfg,
                                    n_demos=vcfg['n_demos'],
                                    augment=False)
+        
+    test_loader = DataLoader(ds, shuffle=False,
+            num_workers=11,
+            batch_size=vcfg['batch_size'],
+            pin_memory=True)
+
 
     all_results = {}
     name = '{}-{}-n{}'.format(eval_task, vcfg['agent'], vcfg['n_demos'])
-
+    use_cuda = torch.cuda.is_available()
+    device = "cuda" if use_cuda else "cpu"
     # Save path for results.
     json_name = f"multi-results-{mode}.json" if 'multi' in vcfg['model_path'] else f"results-{mode}.json"
     save_path = vcfg['save_path']
@@ -101,25 +104,28 @@ def main(vcfg):
 
         results = []
         mean_reward = 0.0
+        successful_episodes = 0
 
         # Run testing for each training run.
         for train_run in range(vcfg['n_repeats']):
 
             # Initialize agent.
             utils.set_seed(train_run, torch=True)
-            agent = agents.names[vcfg['agent']](name, tcfg, None, ds)
+            agent = agents.names[vcfg['agent']](name, tcfg, test_loader, test_loader)
 
             # Load checkpoint
             agent.load(model_file)
+            agent = agent.to(dtype=torch.float).to(device) 
             print(f"Loaded: {model_file}")
 
             record = vcfg['record']['save_video']
             n_demos = vcfg['n_demos']
 
+
             # Run testing and save total rewards with last transition info.
             for i in range(0, n_demos):
                 print(f'Test: {i + 1}/{n_demos}')
-                episode, seed = ds.load(i)
+                episode, seed = agent.test_ds.load(i)
                 goal = episode[-1]
                 total_reward = 0
                 np.random.seed(seed)
@@ -146,8 +152,9 @@ def main(vcfg):
                     if 'multi' in vcfg['model_task']:
                         video_name = f"{vcfg['model_task']}-{video_name}"
                     env.start_rec(video_name)
-
+                steps_took = 0
                 for _ in range(task.max_steps):
+                    steps_took += 1
                     act = agent.act(obs, info, goal)
                     lang_goal = info['lang_goal']
                     print(f'Lang Goal: {lang_goal}')
@@ -155,11 +162,13 @@ def main(vcfg):
                     total_reward += reward
                     print(f'Total Reward: {total_reward:.3f} | Done: {done}\n')
                     if done:
+                        if total_reward > 0.99:
+                            successful_episodes += 1
                         break
 
                 results.append((total_reward, info))
                 mean_reward = np.mean([r for r, i in results])
-                print(f'Mean: {mean_reward} | Task: {task_name} | Ckpt: {ckpt}')
+                print(f'Mean: {mean_reward} | Task: {task_name} | Ckpt: {ckpt} | Success rate: {successful_episodes/(i+1)}')
 
                 # End recording video
                 if record:
@@ -168,7 +177,11 @@ def main(vcfg):
             all_results[ckpt] = {
                 'episodes': results,
                 'mean_reward': mean_reward,
+                'steps_took': steps_took,
+                'success_rate': successful_episodes/n_demos
             }
+        
+            print(all_results[ckpt])
 
         # Save results in a json file.
         if vcfg['save_results']:
@@ -199,7 +212,7 @@ def list_ckpts_to_eval(vcfg, existing_results):
 
     # Find the best checkpoint from validation and run eval on the test set.
     elif vcfg['checkpoint_type'] == 'test_best':
-        result_jsons = [c for c in os.listdir(vcfg['results_path']) if "results-val" in c]
+        result_jsons = [c for c in os.listdir(vcfg['results_path']) if "best" in c]
         if 'multi' in vcfg['model_task']:
             result_jsons = [r for r in result_jsons if "multi" in r]
         else:

@@ -113,12 +113,12 @@ hydra:
     - hydra.mode=RUN
     task: []
   job:
-    name: demos
+    name: my_eval
     chdir: null
     override_dirname: ''
     id: ???
     num: ???
-    config_name: data
+    config_name: my_eval
     env_set: {}
     env_copy: []
     config:
