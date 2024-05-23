@@ -20,18 +20,18 @@ train:
   model_task: ${train.task}
   exp_folder: exps
   # insert here your train data path
-  train_dir: /GenSim/data/GenSim_Data_Train/build-car/data # /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/data  #${root_dir}/${train.exp_folder}/${train.model_task}-${train.agent}-n${train.n_demos}-train
+  train_dir: /home/constantin/thesis/GenSim/data/GenSim_Data_Train/${train.task} # /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/data  #${root_dir}/${train.exp_folder}/${train.model_task}-${train.agent}-n${train.n_demos}-train
   data_dir: ${train_dir}/data
 
   # task configs
-  task: build-car #stack-block-pyramid-seq-seen-colors # GenSim_buildcar_trajectories # 
+  task: towers-of-hanoi #stack-block-pyramid-seq-seen-colors # GenSim_buildcar_trajectories # 
   agent: cliport
   n_demos: 1000 # change to small number to reduce trajectory amount
   n_steps: 200000 # original paper use 200000 for single task and use 601000 for multi-task models
 
   # hyper params
   n_rotations: 36
-  batch_size: 5
+  batch_size: 4
   batchnorm: False # important: False because batch_size=1
   lr: 1e-4
 
