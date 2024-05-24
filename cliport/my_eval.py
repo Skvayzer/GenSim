@@ -92,7 +92,7 @@ def main(vcfg):
             existing_results = json.load(f)
 
     # Make a list of checkpoints to eval.
-    ckpts_to_eval = ['best_epoch=12_vl_loss=0.00.ckpt'] #list_ckpts_to_eval(vcfg, existing_results)
+    ckpts_to_eval = ['best_epoch=25_vl_loss=0.00.ckpt'] # ['best_epoch=01_vl_loss=0.00.ckpt'] #list_ckpts_to_eval(vcfg, existing_results)
 
     # Evaluation loop
     print(f"Evaluating: {str(ckpts_to_eval)}")
@@ -160,7 +160,7 @@ def main(vcfg):
                 steps_took = 0
                 for _ in range(task.max_steps):
                     steps_took += 1
-                    print(obs['color'][0].shape, info, goal)
+                    # print(obs['color'][0].shape, info, goal)
                     act = agent.act(obs, info, goal)
                     lang_goal = info['lang_goal']
                     print(f'Lang Goal: {lang_goal}')

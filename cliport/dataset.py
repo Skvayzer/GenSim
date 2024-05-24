@@ -1130,7 +1130,7 @@ class MyCustomDataset(Dataset):
             cam_config = self.cam_config
 
         # Get color and height maps from RGB-D images.
-        cmap, hmap = obs.values()  # utils.get_fused_heightmap(obs, cam_config, self.bounds, self.pix_size) # 
+        cmap, hmap =  utils.get_fused_heightmap(obs, cam_config, self.bounds, self.pix_size) # obs.values() 
         img = np.concatenate((cmap,
                               hmap[Ellipsis, None],
                               hmap[Ellipsis, None],
@@ -1141,7 +1141,7 @@ class MyCustomDataset(Dataset):
     def process_sample(self, datum, augment=True):
         # Get training labels from data sample.
         (obs, act, _, info) = datum
-        img = np.concatenate((obs['color'], obs['color']), axis=-1) # self.get_image(obs)  
+        img = self.get_image(obs)  # np.concatenate((obs['color'], obs['color']), axis=-1) #  
         
 
         # p0, p1 = None, None
@@ -1219,7 +1219,7 @@ class MyCustomDataset(Dataset):
     def process_goal(self, goal, perturb_params):
         # Get goal sample.
         (obs, act, _, info) = goal
-        img = np.concatenate((obs['color'], obs['color']), axis=-1) # self.get_image(obs)  
+        img = self.get_image(obs)  # np.concatenate((obs['color'], obs['color']), axis=-1)  
         # p0, p1 = None, None
         # p0_theta, p1_theta = None, None
 
