@@ -370,6 +370,7 @@ class TransporterAgent(LightningModule):
 
         # Attention model forward pass.
         pick_inp = {'inp_img': img}
+        print(img.shape)
         pick_conf = self.attn_forward(pick_inp)
         
         
