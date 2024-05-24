@@ -28,13 +28,13 @@ batch_size: 1
 # paths
 model_dir: ${root_dir}
 exp_folder: exps
-data_dir: /home/constantin/thesis/GenSim_Reserved/data/GenSim_Data_Train/stack-block-pyramid/ # /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/data #/home/cosmos/VScode Projects/coglab/GenSim/data/ 
+data_dir: /home/constantin/thesis/GenSim/data/GenSim_Data_Train/stack-block-pyramid/ # /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/data #/home/cosmos/VScode Projects/coglab/GenSim/data/ 
 assets_root: ${root_dir}/environments/assets/
 
-model_path: /home/constantin/thesis/GenSim_Reserved/data/GenSim_Data_Train/stack-block-pyramid/checkpoints # /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/checkpoints_without_depth/checkpoints/ #${model_dir}/${exp_folder}/${model_task}-${agent}-n${train_demos}-train/checkpoints/ # path to pre-trained models
+model_path: /home/constantin/thesis/GenSim/data/GenSim_Data_Train/stack-block-pyramid/checkpoints # /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/checkpoints_without_depth/checkpoints/ #${model_dir}/${exp_folder}/${model_task}-${agent}-n${train_demos}-train/checkpoints/ # path to pre-trained models
 train_config: /home/constantin/thesis/GenSim/cliport/cfg/train.yaml # /home/cosmos/VScode Projects/coglab/GenSim/cliport/cfg/train.yaml  #${model_dir}/${exp_folder}/${model_task}-${agent}-n${train_demos}-train/.hydra/config.yaml # path to train config
-save_path: /home/constantin/thesis/GenSim_Reserved/data/GenSim_Data_Train/stack-block-pyramid/checkpoints #${model_dir}/${exp_folder}/${eval_task}-${agent}-n${train_demos}-train/checkpoints/ # path to save results
-results_path: /home/constantin/thesis/GenSim_Reserved/data/GenSim_Data_Train/stack-block-pyramid/checkpoints  # /GenSim/data/GenSim_Data_Train/build-car/checkpoints/ # ${model_dir}/${exp_folder}/${eval_task}-${agent}-n${train_demos}-train/checkpoints/ # path to existing results
+save_path: /home/constantin/thesis/GenSim/data/GenSim_Data_Train/stack-block-pyramid/checkpoints #${model_dir}/${exp_folder}/${eval_task}-${agent}-n${train_demos}-train/checkpoints/ # path to save results
+results_path: /home/constantin/thesis/GenSim/data/GenSim_Data_Train/stack-block-pyramid/checkpoints  # /GenSim/data/GenSim_Data_Train/build-car/checkpoints/ # ${model_dir}/${exp_folder}/${eval_task}-${agent}-n${train_demos}-train/checkpoints/ # path to existing results
 
 
 # record videos (super slow)
