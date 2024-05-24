@@ -52,8 +52,10 @@ def main(vcfg):
         # training_sets.append(Dataset_Custom(data_path,tsk_name,range(74)))
         # import torch
         # train_dev_sets = torch.utils.data.ConcatDataset(training_sets)
+        data_dir = os.path.join(data_dir, 'val')
+        print("Data dir: ", data_dir)
 
-        ds = dataset.MyCustomDataset(os.path.join(data_dir, 'val'), 'data', tcfg, 
+        ds = dataset.MyCustomDataset(data_dir, 'data', tcfg, 
                     n_demos=vcfg['n_demos'], augment=False)
 
     
@@ -64,9 +66,9 @@ def main(vcfg):
                                    augment=False)
         
     test_loader = DataLoader(ds, shuffle=False,
-            num_workers=0,
-            batch_size=vcfg['batch_size'],
-            pin_memory=True)
+           # num_workers=0,
+            batch_size=vcfg['batch_size'],)
+           # pin_memory=True)
     
     print("Eval dataset length: ", len(test_loader))
 
@@ -158,7 +160,7 @@ def main(vcfg):
                 steps_took = 0
                 for _ in range(task.max_steps):
                     steps_took += 1
-                    print(obs['color'][0].shape)
+                    print(obs['color'][0].shape, info, goal)
                     act = agent.act(obs, info, goal)
                     lang_goal = info['lang_goal']
                     print(f'Lang Goal: {lang_goal}')
