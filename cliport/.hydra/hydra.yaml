@@ -118,7 +118,7 @@ hydra:
     override_dirname: ''
     id: ???
     num: ???
-    config_name: my_eval
+    config_name: debug_eval
     env_set: {}
     env_copy: []
     config:

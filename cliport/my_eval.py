@@ -15,7 +15,7 @@ import torch
 from torch.utils.data import DataLoader
 
 
-@hydra.main(config_path='./cfg', config_name='my_eval')
+@hydra.main(config_path='./cfg', config_name='debug_eval')
 def main(vcfg):
     # Load train cfg
     tcfg = utils.load_hydra_config(vcfg['train_config'])
@@ -92,7 +92,7 @@ def main(vcfg):
             existing_results = json.load(f)
 
     # Make a list of checkpoints to eval.
-    ckpts_to_eval = ['best_epoch=25_vl_loss=0.00.ckpt'] # ['best_epoch=01_vl_loss=0.00.ckpt'] #list_ckpts_to_eval(vcfg, existing_results)
+    ckpts_to_eval = ['best_epoch=01_vl_loss=0.00.ckpt'] # ['best_epoch=25_vl_loss=0.00.ckpt'] #list_ckpts_to_eval(vcfg, existing_results)
 
     # Evaluation loop
     print(f"Evaluating: {str(ckpts_to_eval)}")
