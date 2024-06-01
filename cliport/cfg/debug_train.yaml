@@ -1,0 +1,63 @@
+# Training
+
+defaults:
+  - config
+
+hydra:
+  run:
+    dir: ${train.train_dir}
+    
+
+dataset:
+  type: 'my' # 'single' or 'multi' or 'my'
+  images: True
+  cache: False # load episodes to memory instead of reading from disk
+  augment:
+    theta_sigma: 60 # rotation sigma in degrees; N(mu = 0, sigma = theta_sigma).
+
+train:
+  # folders
+  model_task: ${train.task}
+  exp_folder: exps
+  # insert here your train data path
+  train_dir: /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/towers-of-hanoi # /home/constantin/thesis/GenSim/data/GenSim_Data_Train/towers-of-hanoi  #${root_dir}/${train.exp_folder}/${train.model_task}-${train.agent}-n${train.n_demos}-train
+  data_dir:  /home/cosmos/VScode Projects/coglab/GenSim/data/GenSim_Data_Train/towers-of-hanoi # /home/constantin/thesis/GenSim/data/GenSim_Data_Train/towers-of-hanoi
+
+  # task configs
+  task: towers-of-hanoi #stack-block-pyramid-seq-seen-colors # GenSim_buildcar_trajectories # 
+  agent: cliport
+  n_demos: 1000 # change to small number to reduce trajectory amount
+  n_steps: 200000 # original paper use 200000 for single task and use 601000 for multi-task models
+
+  # hyper params
+  n_rotations: 36
+  batch_size: 1
+  batchnorm: False # important: False because batch_size=1
+  lr: 1e-4
+
+  attn_stream_fusion_type: 'add'
+  trans_stream_fusion_type: 'conv'
+  lang_fusion_type: 'mult'
+  training_step_scale: 200 # How many epochs are needed. 100 data sample requires 20000 steps. -1 means ignored.
+
+  # script config
+  gpu: -1 # -1 for all
+  log: True # log metrics and stats to wandb
+  n_val: 100
+  val_repeats: 1
+  save_steps: [100, 200, 3000, 4000, 5000, 7000, 10000, 20000, 40000, 80000, 120000, 160000, 200000, 300000, 400000, 500000, 600000, 800000, 1000000, 1200000]
+  load_from_last_ckpt: False # still change to True
+
+  # sim to real
+  data_augmentation: False # additional data augmentation for simtoreal
+wandb:
+  run_name: 'cliport0'
+  logger:
+    entity: cliport
+    project: cliport
+    tags: []
+    group: train
+    offline: False
+  saver:
+    upload: False
+    monitor: 'vl/loss'
