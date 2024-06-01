@@ -87,7 +87,7 @@ def main(cfg):
         check_val_every_n_epoch=1,
         # resume_from_checkpoint=last_checkpoint,   
         sync_batchnorm=True,
-        log_every_n_steps=30,  
+        log_every_n_steps=1,  
         enable_checkpointing=True      
     )
 
