@@ -1,4 +1,4 @@
-# HOW TO INSTALL FOR TRAINING?
+# Environment Installation
 ```bash
 
   python3 -m venv .venv
